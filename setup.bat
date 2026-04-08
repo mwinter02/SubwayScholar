@@ -18,14 +18,14 @@ if not exist .env (
 
 echo.
 echo Setup complete.
-echo Next step: open .env and set your API key:
-echo OPENAI_API_KEY=your_openai_api_key_here
+echo Next step:
+echo 1) Run manual mode (default, no API key required):
+echo    python main.py ^<pdf_path^>
 echo.
-echo After that, run:
-echo run.bat
-echo or
-echo python main.py
-echo use --help for more options such as voice model and background video selection.
+echo 2) Or run API mode (requires OPENAI_API_KEY in .env):
+echo    python main.py ^<pdf_path^> --use-openai-api
+echo.
+echo Use --help for options such as voice model and background video selection.
 
 
 endlocal

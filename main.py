@@ -1,4 +1,5 @@
 import argparse
+import shutil
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,11 +13,23 @@ from modules.video_module import VideoModule
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the full PDF-to-video pipeline.")
     parser.add_argument(
+        "pdf_path",
+        help="Path to input PDF file",
+    )
+    parser.add_argument(
+        "--use-openai-api",
+        action="store_true",
+        help=(
+            "Use OpenAI API for script generation. "
+            "Default mode is manual clipboard + paste flow."
+        ),
+    )
+    parser.add_argument(
         "--voice-model",
         default=TTSModule.DEFAULT_MODEL_NAME,
         help=(
             "Piper voice model name (.onnx optional). "
-            "Default: en_US-lessac-medium.onnx"
+            f"Default: {TTSModule.DEFAULT_MODEL_NAME}"
         ),
     )
     parser.add_argument(
@@ -31,15 +44,14 @@ def main() -> None:
     load_dotenv()
     args = parse_args()
 
-    pdf_path = "input.pdf"  # TODO: Replace with CLI argument or config value
-    output_path = "outputs/video/final.mp4"
+    pdf_path = args.pdf_path
+    output_file = Path("outputs") / f"{Path(pdf_path).stem}.mp4"
 
-    # Ensure project output/model/temp directories exist before pipeline runs.
-    Path("outputs/audio").mkdir(parents=True, exist_ok=True)
-    Path("outputs/images").mkdir(parents=True, exist_ok=True)
-    Path("outputs/video").mkdir(parents=True, exist_ok=True)
+    # Ensure required runtime directories exist before pipeline runs.
+    Path("outputs").mkdir(parents=True, exist_ok=True)
     Path("models").mkdir(parents=True, exist_ok=True)
     Path("temp").mkdir(parents=True, exist_ok=True)
+    _reset_temp_media_dirs()
 
     print("[1/4] Extracting text and images from PDF...")
     pdf_module = PDFModule()
@@ -49,9 +61,12 @@ def main() -> None:
         f"{len(pdf_data.get('images', []))} images."
     )
 
-    print("[2/4] Generating narration script with OpenAI...")
+    if args.use_openai_api:
+        print("[2/4] Generating narration script with OpenAI...")
+    else:
+        print("[2/4] Generating narration script in manual LLM mode...")
     llm_module = LLMModule()
-    script = llm_module.generate_script(pdf_data["text"])
+    script = llm_module.generate_script(pdf_data["text"], use_api=args.use_openai_api)
     print(f"       Generated script with {len(script.split())} words.")
 
     print("[3/4] Converting script to speech...")
@@ -64,12 +79,27 @@ def main() -> None:
     final_video_path = video_module.create_video(
         audio_path,
         pdf_data["images"],
-        output_path,
+        str(output_file),
         background_video=args.background_video,
     )
     print(f"       Video saved to: {final_video_path}")
 
+    _cleanup_temp_media_dirs()
+    print("       Cleaned temporary audio/image files.")
     print(f"Done. Final video path: {final_video_path}")
+
+
+def _reset_temp_media_dirs() -> None:
+    for temp_dir in [Path("temp/images"), Path("temp/audio")]:
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+
+def _cleanup_temp_media_dirs() -> None:
+    for temp_dir in [Path("temp/images"), Path("temp/audio")]:
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

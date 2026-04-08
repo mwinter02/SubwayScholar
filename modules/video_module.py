@@ -93,7 +93,12 @@ class VideoModule:
                     )
                     image_clip = self._set_start(image_clip, index * image_duration)
                     image_clip = self._set_duration(image_clip, image_duration)
-                    image_clip = self._set_position(image_clip, ("center", "center"))
+                    y_position = self._compute_safe_y_position(
+                        image_clip=image_clip,
+                        video_height=float(video_height),
+                        target_center_ratio=0.35,
+                    )
+                    image_clip = self._set_position(image_clip, ("center", y_position))
                     image_overlays.append(image_clip)
                     closable_clips.append(image_clip)
 
@@ -162,3 +167,18 @@ class VideoModule:
         if hasattr(clip, "resized"):
             return clip.resized(new_size=(width, height))
         return clip.resize(newsize=(width, height))
+
+    def _compute_safe_y_position(
+        self, image_clip: Any, video_height: float, target_center_ratio: float
+    ) -> float:
+        image_size = getattr(image_clip, "size", None)
+        if not image_size or image_size[1] <= 0:
+            return max(0.0, video_height * target_center_ratio)
+
+        image_height = float(image_size[1])
+        target_center_y = video_height * target_center_ratio
+        top_y = target_center_y - (image_height / 2.0)
+
+        # Clamp to visible bounds so the image never overflows the frame.
+        max_top_y = max(0.0, video_height - image_height)
+        return max(0.0, min(top_y, max_top_y))

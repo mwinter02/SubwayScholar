@@ -18,7 +18,7 @@ class TTSModule:
         "en/en_US/hfc_male/medium/en_US-hfc_male-medium.onnx.json"
     )
 
-    OUTPUT_AUDIO_PATH = Path("outputs/audio/output.wav")
+    TEMP_AUDIO_PATH = Path("temp/audio/output.wav")
 
     def synthesize(self, script: str, model: str | None = None) -> str:
         """
@@ -27,7 +27,7 @@ class TTSModule:
         Returns:
             Path to generated WAV audio file
         """
-        self.OUTPUT_AUDIO_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self.TEMP_AUDIO_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
         model_path, config_path = self._ensure_model_files(model)
@@ -47,7 +47,7 @@ class TTSModule:
             voice = PiperVoice.load(model_path=model_path, config_path=config_path, use_cuda=False)
             syn_config = SynthesisConfig()
 
-            with wave.open(str(self.OUTPUT_AUDIO_PATH), "wb") as wav_file:
+            with wave.open(str(self.TEMP_AUDIO_PATH), "wb") as wav_file:
                 wrote_audio = False
                 for audio_chunk in voice.synthesize(cleaned_script, syn_config=syn_config):
                     if not wrote_audio:
@@ -61,7 +61,7 @@ class TTSModule:
             if not wrote_audio:
                 raise RuntimeError("Piper TTS synthesis failed")
 
-            return str(self.OUTPUT_AUDIO_PATH)
+            return str(self.TEMP_AUDIO_PATH)
         except RuntimeError as exc:
             if str(exc) == "Piper TTS synthesis failed":
                 raise

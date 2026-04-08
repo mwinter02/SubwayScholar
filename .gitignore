@@ -9,12 +9,10 @@ models/*
 !models/.gitkeep
 
 # Generated pipeline artifacts
-outputs/audio/*
-!outputs/audio/.gitkeep
-outputs/images/*
-!outputs/images/.gitkeep
-outputs/video/*
-!outputs/video/.gitkeep
+outputs/*
+!outputs/.gitkeep
+temp/*
+!temp/.gitkeep
 
 # Generated test artifacts
 tests/pdf/*

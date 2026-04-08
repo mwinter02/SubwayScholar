@@ -5,6 +5,8 @@ import fitz
 
 
 class PDFModule:
+    TEMP_IMAGES_DIR = Path("temp/images")
+
     def extract(self, pdf_path: str) -> dict:
         """
         Returns:
@@ -17,7 +19,7 @@ class PDFModule:
         if not pdf_file.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-        images_output_dir = Path("outputs/images")
+        images_output_dir = self.TEMP_IMAGES_DIR
         images_output_dir.mkdir(parents=True, exist_ok=True)
 
         text_parts: List[str] = []
