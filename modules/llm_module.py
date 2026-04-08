@@ -64,16 +64,26 @@ class LLMModule:
         print("       Next steps:")
         print("       1. Open your LLM of choice.")
         print("       2. Paste the copied prompt (or prompt file contents) and submit.")
-        print("       3. Paste the generated script below and press Enter to submit.")
+        print("       3. Paste the generated script below.")
+        print("       4. Type END on its own line to finish input.")
 
         script = self._read_script_from_terminal()
         return script
 
     def _read_script_from_terminal(self) -> str:
-        try:
-            script = input().strip()
-        except EOFError as exc:
-            raise RuntimeError("No script text was provided in manual LLM mode.") from exc
+        lines: List[str] = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+
+            if line.strip() == "END":
+                break
+
+            lines.append(line)
+
+        script = "\n".join(lines).strip()
 
         if not script:
             raise RuntimeError("No script text was provided in manual LLM mode.")

@@ -49,7 +49,7 @@ def main() -> None:
 
     # Ensure required runtime directories exist before pipeline runs.
     Path("outputs").mkdir(parents=True, exist_ok=True)
-    Path("models").mkdir(parents=True, exist_ok=True)
+    Path("voices").mkdir(parents=True, exist_ok=True)
     Path("temp").mkdir(parents=True, exist_ok=True)
     _reset_temp_media_dirs()
 

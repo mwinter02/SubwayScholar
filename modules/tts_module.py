@@ -5,7 +5,7 @@ import requests
 
 
 class TTSModule:
-    MODEL_DIR = Path("models")
+    MODEL_DIR = Path("voices")
     DEFAULT_MODEL_NAME = "en_US-hfc_male-medium.onnx"
     DEFAULT_MODEL_CONFIG_NAME = "en_US-hfc_male-medium.onnx.json"
 

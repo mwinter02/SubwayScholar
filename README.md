@@ -2,16 +2,8 @@
 
 Convert a research paper PDF into a short narrated MP4 video with gameplay in the background.
 
-Pipeline overview:
-1. Extract text and images from PDF (PyMuPDF)
-2. Generate a short narration script (Manual or OpenAI API mode)
-3. Convert script to speech (local Piper TTS)
-4. Compose final video (MoviePy)
-
-Runtime behavior:
-- Temporary images/audio are written to `temp/` during execution.
-- After successful video creation, temporary media files are cleaned up.
-- Final video is written to `outputs/<input_pdf_name>.mp4`.
+## Examples
+Using the [ReSTIR GI](https://research.nvidia.com/publication/2021-06_restir-gi-path-resampling-real-time-path-tracing) paper, here is an [example video output](https://docs.google.com/document/d/11DF9sVM-ofZCLlb_zVvDweTV9Jdg-MGtN3EXrJ-X2Ok/edit?usp=sharing)
 
 ## Project Summary
 
@@ -26,6 +18,8 @@ Key success factors:
 - Clear API contracts between modules
 - Strong upfront structure
 - Focused context windows for each step
+
+End to end this project took roughly 3 hours, most of which was spent brainstorming and waiting for Codex to implement features. Due to the careful construction of the prompts, no debugging or intervention was required throughout.
 
 ## Requirements
 
@@ -88,7 +82,7 @@ Flow:
 1. App copies prompt + parsed PDF text to clipboard
 2. Paste into your LLM of choice
 3. Paste generated script back into terminal
-4. Press `Enter` to submit
+4. Enter `END` on its own line to submit
 
 ### 2) OpenAI API mode
 
@@ -112,8 +106,8 @@ python main.py <pdf_path> --use-openai-api --voice-model <voice_model_name> --ba
 ```
 
 Notes:
-- Default Piper model files are auto-downloaded to `models/` if missing.
-- Custom Piper voice models should exist in `models/` as:
+- Default Piper model files are auto-downloaded to `voices/` if missing.
+- Custom Piper voice models should exist in `voices/` as:
   - `<model>.onnx`
   - `<model>.onnx.json`
 
@@ -140,6 +134,33 @@ Test outputs are written to:
 - `tests/tts/`
 - `tests/video/`
 
+## Future Extensions
+
+### Semantic image alignment per sentence
+
+A high-impact next step is to align on-screen visuals with the current narration sentence instead of showing extracted PDF images in simple sequence.
+
+Concept:
+1. Split the generated script into sentence-level segments with timestamps.
+2. Build semantic embeddings for each sentence and each available visual candidate:
+   - extracted PDF figures
+   - optional external image/video candidates
+3. Match each sentence to the most relevant visual using embedding similarity.
+4. Render the timeline so visuals change exactly when sentence topics change.
+
+Why this is better:
+- Stronger narrative coherence (visuals match what is being said now)
+- Higher viewer retention
+- Better educational clarity for technical papers
+
+Tradeoffs and cost:
+- Significantly higher compute cost (embedding generation + matching + timeline optimization)
+- More memory/storage for indexing visual candidates
+- Additional latency at generation time
+- Potential need for reranking or quality filters to avoid weak matches
+
+This feature would likely require a more advanced retrieval pipeline and careful optimization to keep runtime practical.
+
 ## Project Structure
 
 ```text
@@ -162,7 +183,7 @@ project_root/
 ├── assets/
 │   └── background.mp4
 │
-├── models/                 # Piper voice models (auto-downloaded)
+├── voices/                 # Piper voice models (auto-downloaded)
 ├── outputs/
 │   └── <input_pdf_name>.mp4
 ├── temp/                   # transient media during run (cleaned after success)
