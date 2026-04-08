@@ -3,3 +3,25 @@
 venv/
 __pycache__/
 *.pyc
+
+# Generated pipeline artifacts
+outputs/audio/*
+!outputs/audio/.gitkeep
+outputs/images/*
+!outputs/images/.gitkeep
+outputs/video/*
+!outputs/video/.gitkeep
+
+# Generated test artifacts
+tests/pdf/*
+!tests/pdf/.gitkeep
+!tests/pdf/__init__.py
+tests/llm/*
+!tests/llm/.gitkeep
+!tests/llm/__init__.py
+tests/tts/*
+!tests/tts/.gitkeep
+!tests/tts/__init__.py
+tests/video/*
+!tests/video/.gitkeep
+!tests/video/__init__.py

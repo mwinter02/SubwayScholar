@@ -8,7 +8,9 @@ This project scaffolds a modular Python pipeline to convert a research paper (PD
 - Subway surfers stock footage - [
 Subway Surfers (2024) - Gameplay [4K 9x16] No Copyright](https://www.youtube.com/watch?v=QPW3XwBoQlw)
 
+
 - TTS model: Piper
+- Voices can be downloaded [here](https://rhasspy.github.io/piper-samples/)
 
 
 ## Project Structure

@@ -1,4 +1,3 @@
-pdfplumber
 pymupdf
 moviepy
 pyttsx3

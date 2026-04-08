@@ -6,15 +6,22 @@ from typing import Any
 class VideoModule:
     BACKGROUND_VIDEO_PATH = Path("assets/background.mp4")
 
-    def create_video(self, audio_path: str, images: list, output_path: str) -> str:
+    def create_video(
+        self,
+        audio_path: str,
+        images: list,
+        output_path: str,
+        background_video: str = "assets/background.mp4",
+    ) -> str:
         """Returns final video path"""
         audio_file = Path(audio_path)
         if not audio_file.exists():
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-        if not self.BACKGROUND_VIDEO_PATH.exists():
+        background_video_path = Path(background_video)
+        if not background_video_path.exists():
             raise FileNotFoundError(
-                f"Background video not found: {self.BACKGROUND_VIDEO_PATH}"
+                f"Background video not found: {background_video_path}"
             )
 
         output_file = Path(output_path)
@@ -47,7 +54,7 @@ class VideoModule:
             if audio_duration <= 0:
                 raise ValueError("Audio duration must be greater than zero")
 
-            background_clips = [VideoFileClip(str(self.BACKGROUND_VIDEO_PATH))]
+            background_clips = [VideoFileClip(str(background_video_path))]
             closable_clips.extend(background_clips)
 
             background_duration = float(
@@ -56,9 +63,13 @@ class VideoModule:
             if background_duration <= 0:
                 raise ValueError("Background video duration must be greater than zero")
 
+            video_width, video_height = background_clips[0].size
+            safe_area_width = float(video_width) * 0.5
+            safe_area_height = float(video_height) * 0.5
+
             repeats = max(1, math.ceil(audio_duration / background_duration))
             for _ in range(repeats - 1):
-                clip = VideoFileClip(str(self.BACKGROUND_VIDEO_PATH))
+                clip = VideoFileClip(str(background_video_path))
                 background_clips.append(clip)
                 closable_clips.append(clip)
 
@@ -75,6 +86,11 @@ class VideoModule:
                         raise FileNotFoundError(f"Image file not found: {image_path}")
 
                     image_clip = ImageClip(str(image_file))
+                    image_clip = self._fit_image_to_safe_area(
+                        image_clip=image_clip,
+                        max_width=safe_area_width,
+                        max_height=safe_area_height,
+                    )
                     image_clip = self._set_start(image_clip, index * image_duration)
                     image_clip = self._set_duration(image_clip, image_duration)
                     image_clip = self._set_position(image_clip, ("center", "center"))
@@ -127,3 +143,22 @@ class VideoModule:
         if hasattr(clip, "with_audio"):
             return clip.with_audio(audio_clip)
         return clip.set_audio(audio_clip)
+
+    def _fit_image_to_safe_area(
+        self, image_clip: Any, max_width: float, max_height: float
+    ) -> Any:
+        image_size = getattr(image_clip, "size", None)
+        if not image_size or image_size[0] <= 0 or image_size[1] <= 0:
+            return image_clip
+
+        image_width, image_height = float(image_size[0]), float(image_size[1])
+        scale = min(max_width / image_width, max_height / image_height, 1.0)
+
+        resized_width = max(1, int(round(image_width * scale)))
+        resized_height = max(1, int(round(image_height * scale)))
+        return self._resize(image_clip, resized_width, resized_height)
+
+    def _resize(self, clip: Any, width: int, height: int) -> Any:
+        if hasattr(clip, "resized"):
+            return clip.resized(new_size=(width, height))
+        return clip.resize(newsize=(width, height))

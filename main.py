@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -8,8 +9,27 @@ from modules.tts_module import TTSModule
 from modules.video_module import VideoModule
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the full PDF-to-video pipeline.")
+    parser.add_argument(
+        "--voice-model",
+        default=TTSModule.DEFAULT_MODEL_NAME,
+        help=(
+            "Piper voice model name (.onnx optional). "
+            "Default: en_US-lessac-medium.onnx"
+        ),
+    )
+    parser.add_argument(
+        "--background-video",
+        default="assets/background.mp4",
+        help="Path to background video file. Default: assets/background.mp4",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
     load_dotenv()
+    args = parse_args()
 
     pdf_path = "input.pdf"  # TODO: Replace with CLI argument or config value
     output_path = "outputs/video/final.mp4"
@@ -36,12 +56,17 @@ def main() -> None:
 
     print("[3/4] Converting script to speech...")
     tts_module = TTSModule()
-    audio_path = tts_module.synthesize(script)
+    audio_path = tts_module.synthesize(script, model=args.voice_model)
     print(f"       Audio saved to: {audio_path}")
 
     print("[4/4] Creating final video...")
     video_module = VideoModule()
-    final_video_path = video_module.create_video(audio_path, pdf_data["images"], output_path)
+    final_video_path = video_module.create_video(
+        audio_path,
+        pdf_data["images"],
+        output_path,
+        background_video=args.background_video,
+    )
     print(f"       Video saved to: {final_video_path}")
 
     print(f"Done. Final video path: {final_video_path}")

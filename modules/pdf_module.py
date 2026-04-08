@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import fitz
-import pdfplumber
 
 
 class PDFModule:
@@ -21,21 +20,18 @@ class PDFModule:
         images_output_dir = Path("outputs/images")
         images_output_dir.mkdir(parents=True, exist_ok=True)
 
-        text_parts = []
-        with pdfplumber.open(str(pdf_file)) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text() or ""
-                if page_text:
-                    text_parts.append(page_text)
-
-        full_text = "\n".join(text_parts)
-
+        text_parts: List[str] = []
         saved_images: List[str] = []
         image_index = 1
 
         with fitz.open(str(pdf_file)) as doc:
             for page_number in range(len(doc)):
                 page = doc.load_page(page_number)
+
+                page_text = self._extract_page_text(page)
+                if page_text:
+                    text_parts.append(page_text)
+
                 for image_info in page.get_images(full=True):
                     xref = image_info[0]
                     image_path = images_output_dir / f"image_{image_index}.png"
@@ -61,7 +57,40 @@ class PDFModule:
                     saved_images.append(str(image_path))
                     image_index += 1
 
+        full_text = "\n\n".join(text_parts)
+
         return {
             "text": full_text,
             "images": saved_images,
         }
+
+    def _extract_page_text(self, page: fitz.Page) -> str:
+        words = page.get_text("words", sort=True)
+        if not words:
+            return (page.get_text("text") or "").strip()
+
+        lines: List[str] = []
+        current_key = None
+        current_words: List[str] = []
+
+        for word_entry in words:
+            text = str(word_entry[4]).strip()
+            if not text:
+                continue
+
+            key = (int(word_entry[5]), int(word_entry[6]))
+            if current_key is None:
+                current_key = key
+
+            if key != current_key:
+                if current_words:
+                    lines.append(" ".join(current_words))
+                current_words = [text]
+                current_key = key
+            else:
+                current_words.append(text)
+
+        if current_words:
+            lines.append(" ".join(current_words))
+
+        return "\n".join(lines).strip()
