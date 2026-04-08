@@ -4,6 +4,10 @@ venv/
 __pycache__/
 *.pyc
 
+# Downloaded TTS models
+models/*
+!models/.gitkeep
+
 # Generated pipeline artifacts
 outputs/audio/*
 !outputs/audio/.gitkeep
