@@ -3,7 +3,7 @@
 Convert a research paper PDF into a short narrated MP4 video with gameplay in the background.
 
 ## Examples
-Using the [ReSTIR GI](https://research.nvidia.com/publication/2021-06_restir-gi-path-resampling-real-time-path-tracing) paper, here is an [example video output](https://docs.google.com/document/d/11DF9sVM-ofZCLlb_zVvDweTV9Jdg-MGtN3EXrJ-X2Ok/edit?usp=sharing)
+Using the [ReSTIR GI](https://research.nvidia.com/publication/2021-06_restir-gi-path-resampling-real-time-path-tracing) paper, here is an [example video output](https://drive.google.com/file/d/1EgaTgdD6D-JXlal6tSBxRBzTg8nun0Sm/view?usp=sharing)
 
 ## Project Summary
 
